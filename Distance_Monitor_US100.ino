@@ -7,6 +7,8 @@
  *         If cmich_open network not found, ESP8266 will switch to ad-hoc(soft AP) WiFi
  * V 1.2   2019-05-31
  *         Added phase shift compensation to Savitzky-Golay filter
+ * V 1.3   2019-06-11
+ *         Code clean-up
  *   
  */
 
@@ -309,7 +311,6 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
       display.println("Downloading data...");
       display.display();
 
-//      Serial.printf("loop heap size: %u\n", ESP.getFreeHeap());
 
 
       // Savitzky-Golay Filtering starts here
@@ -319,6 +320,7 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
       SG_Filter(dist_mm1, n, w, 0);
       SG_Filter(dist_mm2, n, w, -TDELAY/tstep);
 //      SG_Filter(dist_mm2, n, m, 0.0);
+
       // S-G filtering ends here
 
 
@@ -349,11 +351,7 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     s += F("</body>\n</html>");
     server.sendContent(s);
 
-/*      
-    if (SPIFFS.exists(path2)) {                           // If the file exists
-      mystream(path2);
-    }
-*/
+
     clearDisplayLines();
     return true;
   }
@@ -395,6 +393,10 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   return false;                                         // If the file doesn't exist, return false
 }
 
+
+// The next three functions are from P. A. Gorry, Analyt. Chem. 62, 570 (1990).
+// Weights() calculates the Savitzky-Golay filter coefficients for the j-th data point for the t-th Least-Square point of the s-th derivative.
+// Filter window width is 2m+1 points; polynomial order is n.
 double Weights(int j, int t, int m, int n, int s){
   int k; 
   double sum; 
@@ -434,6 +436,7 @@ void SG_Filter(short int *data, int n, int w, double shift) {
   double sum0, sum1, sum2;
   int m = (w-1)/2;
  
+  // Pre-calculate the S-G weight factors
   for (int i = -m; i <= m; i++){
     for (int t = -m; t <= m; t++){
        h0[i+m][t+m] = Weights(i,t,m,2,0);
@@ -441,41 +444,30 @@ void SG_Filter(short int *data, int n, int w, double shift) {
        h2[i+m][t+m] = Weights(i,t,m,2,2);
     }
   }   
-  // S-G filter coefficients
-  //double S2 = w*(w*w-1)/12.0;
-  //double S4 = (w*(w*w-1)*(3*w*w-7))/240.0;
-  for (int i = 0; i<w ; i++){      
-        //C0[i] = (((3 * w*w - 7 - 20 * ishift*ishift )/4.0)/((w*(w*w - 4))/3.0));
-        //C1[i] = 1.0*ishift/(w*(w*w-1)/12.0);
-        //C2[i] = (-S2+w*ishift*ishift)/(w*S4-S2*S2);
-//      Serial.printf("i: %i, %f  %f  %f\n", i, C0[i], C1[i], C2[i]);
-  }
   
   // Convolution
   for (int i=0; i<n; i++) {
-      int t;
-      sum0 = 0.0; sum1 = 0.0; sum2 = 0.0;
-      for (int j= -m; j <= m ; j++){  
-        if ((m <= i) && ( i <= (n-1)-m)) {
-           t=0;
-        }   
-        else if (i < m) {
-           t = i - m;
-        }   
-        else {
-          t = i-(n-1-m); 
-        }
-           sum0 += h0[j+m][t+m]*data[i+j-t];
-           sum1 += h1[j+m][t+m]*data[i+j-t];
-      //       Serial.printf("i, j, i_raw: %i %i %i     C1[j]: %f  data[i_raw]: %i  sum1: %f\n", i, j, i_raw, C1[j], data[i_raw], sum1);
-           sum2 += h2[j+m][t+m]*data[i+j-t];
+    int t;
+    sum0 = 0.0; sum1 = 0.0; sum2 = 0.0;
+    for (int j= -m; j <= m ; j++){  
+      if ((m <= i) && ( i <= (n-1)-m)) {
+         t=0;                                 // sufficient number (m) points to the left and right
+      }   
+      else if (i < m) {
+         t = i - m;                           // start of data set (points missing to the left)
+      }   
+      else {
+        t = i-(n-1-m);                        // end of data set (points missing to the right) 
       }
-      NewPoint[i] = round(sum0 + sum1*shift + sum2 * shift*shift);
-      yield(); 
+      sum0 += h0[j+m][t+m]*data[i+j-t];       // smoothed value at point i
+      sum1 += h1[j+m][t+m]*data[i+j-t];       // first derivative at point i  
+      sum2 += h2[j+m][t+m]*data[i+j-t];       // second derivative at point i
+    }
+    NewPoint[i] = round(sum0 + sum1*shift + 0.5 * sum2 * shift*shift);   // phase shift correction
+    yield(); 
   }
       
-//      NewPoint[i] = round(sum0);
-//      Serial.printf("i = %i:     sum0=%f  sum1=%f  sum2=%f s=%f\n", i, sum0, sum1, sum2, shift);
+
   
 
   Serial.printf("In function: first + last data points: %i  %i   %i %i\n", data[0], data[1], data[n-2], data[n-1]);
@@ -485,61 +477,6 @@ void SG_Filter(short int *data, int n, int w, double shift) {
   }
 }
 
-
-
-/*
-// Attempt to read both sensors concurrently. Lots of erroneous values.
-byte read_US100_Dist(SoftwareSerial* SerPort1, SoftwareSerial* SerPort2, unsigned int* DistArray) {
-  unsigned int MSByteDist = 0;
-  unsigned int LSByteDist = 0;
-  unsigned int mmDist1 = 0;
-  unsigned int mmDist2 = 0;
-  byte error = 0;
-
-  
-//  Serial.println("\n");
-    
-  SerPort1->flush(); // clear the serial buffer
-  SerPort1->write(0x55);           // start distance measurement (sensor 1)
-  delayMicroseconds(1800);         // delay between sensor 1 and 2
-  SerPort2->flush();
-  SerPort2->write(0x55);           // start for distance measurement (sensor 2) 
-
-  delay(8);                        // wait for data to be returned
-//  Serial.printf("data availability: %i  -  %i\n", SerPort1->available(), SerPort2->available());
-  if (SerPort1->available()) {     // verify that 2 bytes are available for sensor 1
-    MSByteDist = SerPort1->read(); // read out US-100 data
-    LSByteDist  = SerPort1->read();
-    mmDist1  = MSByteDist * 256 + LSByteDist; // distance in mm
-  }
-  else {
-    mmDist1 = 13;
-    error = 1;
-  }
-
-  delay(2);
-//  Serial.printf("data availability: %i  -  %i\n", SerPort1->available(), SerPort2->available());
-  if (SerPort2->available()) {     // verify that 2 bytes are available for sensor 2
-    MSByteDist = SerPort2->read(); // read out US-100 data
-    LSByteDist  = SerPort2->read();
-    mmDist2  = MSByteDist * 256 + LSByteDist; // distance in mm
-  }
-  else {
-    mmDist2 = 13;
-    error = 1;
-  }
-  
-  DistArray[0] = mmDist1;
-  DistArray[1] = mmDist2;
-
-  if ((mmDist1>MAXDIST) || (mmDist2>MAXDIST)) { error = 1; }
-  if (error) { Serial.println("Distance mesurement error!"); }
-//  Serial.printf("mmDist1: %i DistArray[0] : %04x \n" , mmDist1, DistArray[0]);
-//  Serial.printf("mmDist2: %i DistArray[1] : %04x \n\n" , mmDist2, DistArray[1]);
-
-  return error;
-}
-*/
 
 
 
@@ -552,7 +489,6 @@ byte read_US100_Dist_sequential(SoftwareSerial* SerPort1, SoftwareSerial* SerPor
   byte error = 0;
 
   
-//  Serial.println("\n");
     
   SerPort1->flush(); // clear the serial buffer
   SerPort1->write(0x55);           // start distance measurement (sensor 1)
@@ -571,13 +507,11 @@ byte read_US100_Dist_sequential(SoftwareSerial* SerPort1, SoftwareSerial* SerPor
   }
 
   
-//  delayMicroseconds(1800);         // delay between sensor 1 and 2
+
   SerPort2->flush();
   SerPort2->write(0x55);           // start for distance measurement (sensor 2) 
   delay(9);
-//  Serial.printf("data availability: %i  -  %i\n", SerPort1->available(), SerPort2->available());
   if (SerPort2->available()) {     // verify that 2 bytes are available for sensor 2
-//    Serial.printf("Time delay: %f ms\n", (micros()-tmp)/1.e3);
     MSByteDist = SerPort2->read(); // read out US-100 data
     LSByteDist  = SerPort2->read();
     mmDist2  = MSByteDist * 256 + LSByteDist; // distance in mm
@@ -590,7 +524,7 @@ byte read_US100_Dist_sequential(SoftwareSerial* SerPort1, SoftwareSerial* SerPor
   DistArray[0] = mmDist1;
   DistArray[1] = mmDist2;
   if ((mmDist1>MAXDIST) || (mmDist2>MAXDIST)) { error = 1; }
-  if (error) { Serial.println("Distance mesurement error!"); }
+  if (error) { Serial.println("Distance measurement error!"); }
 //  Serial.printf("mmDist1: %i DistArray[0] : %04x \n" , mmDist1, DistArray[0]);
 //  Serial.printf("mmDist2: %i DistArray[1] : %04x \n\n" , mmDist2, DistArray[1]);
 
