@@ -9,7 +9,8 @@
  *         Added phase shift compensation to Savitzky-Golay filter
  * V 1.3   2019-06-11
  *         Code clean-up
- *   
+ * V 1.4   2019-07-23
+ *         Code clean-up   
  */
 
 #include <ESP8266WiFi.h>
@@ -107,8 +108,8 @@ void mystream(String filepath) {
     else {
       cnt = fa;
     }
-    Serial.println(fa);
-    Serial.println(cnt);
+    Serial.print(F("file available = ")); Serial.println(fa);
+    Serial.print(F("cnt = ")); Serial.println(cnt);
     file.readBytes(buf, cnt);
     buf[cnt] = 0x0;
     server.sendContent(buf);
@@ -244,7 +245,7 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
       Serial.print("n = ");
       Serial.println(n);
     } else {
-      n = 600;
+      n = 400;
     }
 
      // Read filtering Window
@@ -325,11 +326,12 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 
 
       // output data
+      Serial.println(F("Start data download"));
       s = F("Vernier Format 2\r\n");
       s += F("Motion Sensor Distance Readings\r\n");
       s += F("Data Set\r\n");
       s += F("Time\tTop\tBottom\r\n");
-      s += F("T\tTop\tBottom\r\n");
+      s += F("t\td_top\td_bottom\r\n");
       s += F("s\tm\tm\r\n");
       server.sendContent(s);
       
@@ -353,6 +355,7 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 
 
     clearDisplayLines();
+    Serial.println(F("Data downloaded"));
     return true;
   }
   
@@ -468,10 +471,7 @@ void SG_Filter(short int *data, int n, int w, double shift) {
   }
       
 
-  
 
-  Serial.printf("In function: first + last data points: %i  %i   %i %i\n", data[0], data[1], data[n-2], data[n-1]);
-  Serial.printf("In function: first + last filtered data points: %i %i   %i %i\n", NewPoint[0], NewPoint[1], NewPoint[n-2], NewPoint[n-1]);
   for(int i=0; i < n; i++){
       data[i] = NewPoint[i];
   }
