@@ -4,4 +4,4 @@ This repository contains the code and 3D printer files for a dual-head ultrasoni
 
 The built-in webserver uses [Chart.js](https://www.chartjs.org/) and [jQuery](https://jquery.com/).
 
-For details see W. Joysey and A. Mellinger, "Low-cost ultrasonic distance measurement in a mechanical resonance experiment", https://arxiv.org/abs/1906.08778.
+For details, see W. Joysey and A. Mellinger, "Low-cost ultrasonic distance measurement in a mechanical resonance experiment", https://arxiv.org/abs/1906.08778.
