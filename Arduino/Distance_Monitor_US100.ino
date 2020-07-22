@@ -11,6 +11,9 @@
  *         Code clean-up
  * V 1.4   2019-07-23
  *         Code clean-up   
+ * V 1.5   2020-07-22         
+ *         Changed ssid from cmich_open to CMICH-DEVICE
+ *         Updated SoftwareSerial call syntax to work with BoardManager 2.7.2 (old syntax needs 2.4.2 or earlier)
  */
 
 #include <ESP8266WiFi.h>
@@ -19,6 +22,7 @@
 #include <time.h>
 #include <Adafruit_SSD1306.h>
 #include <SoftwareSerial.h>;
+
 
 #define NPTS 2000         // max. number of data points
 #define MAXDIST 1000      // max. distance in mm
@@ -38,7 +42,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 
 //WiFi Connection configuration
-const char* ssid = "cmich_open";
+const char* ssid = "CMICH-DEVICE";
 char ssid_ap[20];
 //const char* password = "secret";
 
@@ -60,8 +64,9 @@ float h2[MAXWIN][MAXWIN];
 #define US100_TX2  15 // D8
 #define US100_RX2  13 // D7
  
-SoftwareSerial US100_sensor_1(US100_RX1, US100_TX1, false, 255);
-SoftwareSerial US100_sensor_2(US100_RX2, US100_TX2, false, 255);
+SoftwareSerial US100_sensor_1;
+SoftwareSerial US100_sensor_2;
+
 
 
 ESP8266WebServer server(80);
@@ -537,8 +542,8 @@ void setup() {
   int rnd;
 
   Serial.begin(115200);
-  US100_sensor_1.begin(9600);
-  US100_sensor_2.begin(9600);
+  US100_sensor_1.begin(9600, SWSERIAL_8N1, US100_RX1, US100_TX1, false, 255);
+  US100_sensor_2.begin(9600, SWSERIAL_8N1, US100_RX2, US100_TX2, false, 255);
 
   delay(500);
 
