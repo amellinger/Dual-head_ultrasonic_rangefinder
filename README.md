@@ -8,7 +8,8 @@ For details, see W. Joysey and A. Mellinger, "Low-cost ultrasonic distance measu
 
 ## Installation
 - Download and install the [Arduino IDE](https://www.arduino.cc/en/main/software)
-- From the IDE, install the [ESP8266 board](https://arduino-esp8266.readthedocs.io/en/latest/installing.html). This version has been tested with esp8266 version 2.7.2. Select the proper board (e.g. LOLIN(WEMOS) D1 R2 & mini)
+- From the IDE, install the [ESP8266 board](https://arduino-esp8266.readthedocs.io/en/latest/installing.html). The recommended version is 2.4.2. For versions 2.6.0 and later, the macro ``ESP8266_NEW_SOFTWARESERIAL`` should be defined in the code to account for synax changes in ``SoftwareSerial``. Not yet fully tested.
+- Select the proper board (e.g. LOLIN(WEMOS) D1 R2 & mini)
 - Install the [Arduino ESP8266 filesystem uploader](https://github.com/esp8266/arduino-esp8266fs-plugin).
 - Close the serial monitor. Select the "Tools > ESP8266 Sketch Data Upload" menu item. This should start uploading the files into ESP8266 flash file system.
 - Compile and upload the code.

@@ -13,7 +13,7 @@
  *         Code clean-up   
  * V 1.5   2020-07-22         
  *         Changed ssid from cmich_open to CMICH-DEVICE
- *         Updated SoftwareSerial call syntax to work with BoardManager 2.7.2 (old syntax needs 2.4.2 or earlier)
+ *         ESP8266_NEW_SOFTWARESERIAL switch to update SoftwareSerial call syntax to work with BoardManager 2.7.2 (old syntax needs 2.4.2 or earlier)
  */
 
 #include <ESP8266WiFi.h>
@@ -23,8 +23,12 @@
 #include <Adafruit_SSD1306.h>
 #include <SoftwareSerial.h>;
 
+// Switch that changes the SoftwareSerial syntac. Activate for esp8266 board versions 2.6.0 or higher.
+// Note: There are still some serial communication problems between the ESP8266 and the US-100. Thus,
+//       it is recommended to disable ESP8266_NEW_SOFTWARESERIAL and use esp8266 board version 2.4.2
+// #define ESP8266_NEW_SOFTWARESERIAL
 
-#define NPTS 2000         // max. number of data points
+#define NPTS 1500         // max. number of data points
 #define MAXDIST 1000      // max. distance in mm
 #define MAXWIN 17        // max. SG filter windwow size
 #define WiFiMAXTRY 40     // max. WiFi connection attempts before switching to soft AP mode
@@ -63,9 +67,16 @@ float h2[MAXWIN][MAXWIN];
 #define US100_RX1  12 // D6
 #define US100_TX2  15 // D8
 #define US100_RX2  13 // D7
- 
-SoftwareSerial US100_sensor_1;
-SoftwareSerial US100_sensor_2;
+
+#ifdef ESP8266_NEW_SOFTWARESERIAL
+  SoftwareSerial US100_sensor_1;
+  SoftwareSerial US100_sensor_2;
+#else
+  SoftwareSerial US100_sensor_1(US100_RX1, US100_TX1, false, 255);
+  SoftwareSerial US100_sensor_2(US100_RX2, US100_TX2, false, 255);
+#endif
+
+
 
 
 
@@ -542,8 +553,13 @@ void setup() {
   int rnd;
 
   Serial.begin(115200);
-  US100_sensor_1.begin(9600, SWSERIAL_8N1, US100_RX1, US100_TX1, false, 255);
-  US100_sensor_2.begin(9600, SWSERIAL_8N1, US100_RX2, US100_TX2, false, 255);
+  #ifdef ESP8266_NEW_SOFTWARESERIAL
+    US100_sensor_1.begin(9600, SWSERIAL_8N1, US100_RX1, US100_TX1, false, 255);
+    US100_sensor_2.begin(9600, SWSERIAL_8N1, US100_RX2, US100_TX2, false, 255);
+  #else 
+    US100_sensor_1.begin(9600);
+    US100_sensor_2.begin(9600);
+  #endif
 
   delay(500);
 
