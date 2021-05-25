@@ -14,6 +14,15 @@
  * V 1.5   2020-07-22         
  *         Changed ssid from cmich_open to CMICH-DEVICE
  *         ESP8266_NEW_SOFTWARESERIAL switch to update SoftwareSerial call syntax to work with BoardManager 2.7.2 (old syntax needs 2.4.2 or earlier)
+ * V 1.6   2020-10-13
+ *         Omitted http:// in IP display on OLED screen. For long numbers, the last digit was sometimes wrapped
+ *         to the next line.
+ *         Reduced "Welcome to CMU Physics" delay from 5000 to 4000 ms.
+ *         
+ * V 1.7   2020-11-03       
+ *         Device connects to www.cmich.edu after web server initialization. Makes the device ping-able
+ *         on CMICH-DEVICE if they get a 141.209 IP address
+ *         (disabled by default)
  */
 
 #include <ESP8266WiFi.h>
@@ -47,6 +56,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //WiFi Connection configuration
 const char* ssid = "CMICH-DEVICE";
+//const char* ssid = "Arubatest";
 char ssid_ap[20];
 //const char* password = "secret";
 
@@ -634,7 +644,7 @@ void setup() {
     Serial.println(ssid);
     // Print the IP address
     Serial.print(F("Use this URL to connect: "));
-    Serial.print("http://");
+    Serial.print("http://");//
     Serial.print(WiFi.localIP());
     Serial.println("/");
   }
@@ -656,19 +666,74 @@ void setup() {
   server.begin();  
   Serial.println(F("Server started"));
 
-
-
-
   // Display welcome message
   display.setCursor(0, 0);     // Start at top-left corner
   display.setTextSize(2);      // Normal 1:1 pixel scale
   display.println(F("Welcome to\n   CMU\n Physics!"));
   display.display();
-  delay(5000);
-  display.clearDisplay();
+  delay(1000);
 
+  display.clearDisplay();
   display.setTextSize(1);      // Normal 1:1 pixel scale
   display.setCursor(0, 0);     // Start at top-left corner
+
+
+/*
+  // Web connectivity check:
+  // Connect to test webserver (initiate connection from device)
+  const char* host = "www.cmich.edu";
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  const int httpPort = 80;  if (!client.connect(host, httpPort)) {
+    Serial.println("Web connectivity check failed");
+    display.println(F("Web connectivity\ncheck: FAILED"));
+    display.display();
+    delay(2000);
+    // return;
+  } else {
+    Serial.print(host);
+    Serial.println(" connected");
+    display.println(F("Web connectivity\ncheck: ok"));
+    display.display();
+    delay(2000);
+  }
+*/
+
+  display.clearDisplay();
+  display.setCursor(0, 0);     // Start at top-left corner
+
+
+
+//  // We now create a URI for the request
+//  String url = "/";
+//
+//  Serial.print("Requesting URL: ");
+//  Serial.println(url);
+//
+//  // This will send the request to the server
+//  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+//               "Host: " + host + "\r\n" +
+//               "Connection: close\r\n\r\n");
+//  unsigned long timeout = millis();
+//  while (client.available() == 0) {
+//    if (millis() - timeout > 5000) {
+//      Serial.println(">>> Client Timeout !");
+//      client.stop();
+//      return;
+//    }
+//  }
+//
+//  // Read all the lines of the reply from server and print them to Serial
+//  while (client.available()) {
+//    String line = client.readStringUntil('\r');
+//    Serial.print(line);
+//  }
+
+  Serial.println();
+  Serial.println("####################closing connection");
+
+
+
 
 
   if (cnt>=WiFiMAXTRY) {
@@ -676,7 +741,7 @@ void setup() {
     display.println(ssid_ap);
     display.println(F("Point your browser to\nIP Address"));
     display.println("");
-    display.print("http://");
+//    /display.print("http://");
     display.println(IP);
   }
   else {
@@ -684,7 +749,7 @@ void setup() {
     display.println(ssid);
     display.println(F("Point your browser to\nIP Address"));
     display.println("");
-    display.print("http://");
+//    display.print("http://")/;
     display.println(WiFi.localIP());
   }
   display.display();
