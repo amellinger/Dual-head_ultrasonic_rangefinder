@@ -23,6 +23,9 @@
  *         Device connects to www.cmich.edu after web server initialization. Makes the device ping-able
  *         on CMICH-DEVICE if they get a 141.209 IP address
  *         (disabled by default)
+ *         
+ * V 1.8   2023-07-20
+ *         Updated jquery to 3.7.0 (security fix). Increased chart line width ("borderWidth") from 1 to 2.
  */
 
 #include <ESP8266WiFi.h>
@@ -30,12 +33,12 @@
 #include <FS.h>   //Include File System Headers
 #include <time.h>
 #include <Adafruit_SSD1306.h>
-#include <SoftwareSerial.h>;
+#include <SoftwareSerial.h>
 
 // Switch that changes the SoftwareSerial syntac. Activate for esp8266 board versions 2.6.0 or higher.
 // Note: There are still some serial communication problems between the ESP8266 and the US-100. Thus,
 //       it is recommended to disable ESP8266_NEW_SOFTWARESERIAL and use esp8266 board version 2.4.2
-// #define ESP8266_NEW_SOFTWARESERIAL
+//#define ESP8266_NEW_SOFTWARESERIAL/
 
 #define NPTS 1500         // max. number of data points
 #define MAXDIST 1000      // max. distance in mm
@@ -167,7 +170,7 @@ void outputChart(int n) {
               fill: false, \
               backgroundColor: \"#0000AA\", \n\
               borderColor: \"#0000AA\", \n\
-              borderWidth: 1, \n\
+              borderWidth: 2, \n\
               pointRadius: 1, \n\
               pointBorderWidth: 0,\n\
               data: [");
@@ -184,14 +187,14 @@ void outputChart(int n) {
     server.sendContent(s);
   }
   
-  s = F("              ] \n\},\n{");
+  s = F("              ] \n},\n{");
   s +=F("     \
               label: 'Bottom', \n\
               showLine: true, \n\
               fill: false, \
               backgroundColor: \"#00AA00\", \n\
               borderColor: \"#00AA00\", \n\
-              borderWidth: 1, \n\
+              borderWidth: 2, \n\
               pointRadius: 1, \n\
               pointBorderWidth: 0,\n\
               data: [");
@@ -207,7 +210,7 @@ void outputChart(int n) {
     //\t" + String(distance2, 4) + "\r\n";
     server.sendContent(s);
   }
-  s = F("              ] \n\}\n");
+  s = F("              ] \n}\n");
   s +=F("]},\n");
   server.sendContent(s);
 
