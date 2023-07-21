@@ -7,7 +7,7 @@ The built-in webserver uses [Chart.js](https://www.chartjs.org/) and [jQuery](ht
 For details, see W. Joysey and A. Mellinger, "Low-cost ultrasonic distance measurement in a mechanical resonance experiment", https://arxiv.org/abs/1906.08778.
 
 ## Installation
-- Download and install the [Arduino IDE](https://www.arduino.cc/en/main/software)
+- Download and install the [Arduino IDE](https://www.arduino.cc/en/main/software). Use the legacy (1.8.xx) IDE, as SPIFFS file system upload is not supported in the Arduino IDE 2.
 - From the IDE, install the [ESP8266 board](https://arduino-esp8266.readthedocs.io/en/latest/installing.html). The recommended version is 2.4.2. For versions 2.6.0 and later, the macro ``ESP8266_NEW_SOFTWARESERIAL`` should be defined in the code to account for synax changes in ``SoftwareSerial``. Not yet fully tested.
 - Select the proper board (e.g. LOLIN(WEMOS) D1 R2 & mini)
 - Install the [Arduino ESP8266 filesystem uploader](https://github.com/esp8266/arduino-esp8266fs-plugin).
