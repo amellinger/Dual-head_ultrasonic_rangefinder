@@ -24,8 +24,9 @@
  *         on CMICH-DEVICE if they get a 141.209 IP address
  *         (disabled by default)
  *         
- * V 1.8   2023-07-20
+ * V 1.8   2023-07-21
  *         Updated jquery to 3.7.0 (security fix). Increased chart line width ("borderWidth") from 1 to 2.
+ *         Added CMU logo. Set filtering min. window size to 3.
  */
 
 #include <ESP8266WiFi.h>
@@ -38,10 +39,11 @@
 // Switch that changes the SoftwareSerial syntac. Activate for esp8266 board versions 2.6.0 or higher.
 // Note: There are still some serial communication problems between the ESP8266 and the US-100. Thus,
 //       it is recommended to disable ESP8266_NEW_SOFTWARESERIAL and use esp8266 board version 2.4.2
-//#define ESP8266_NEW_SOFTWARESERIAL/
+// #define ESP8266_NEW_SOFTWARESERIAL
 
 #define NPTS 1500         // max. number of data points
 #define MAXDIST 1000      // max. distance in mm
+#define MINWIN 3        // min. SG filter windwow size
 #define MAXWIN 17        // max. SG filter windwow size
 #define WiFiMAXTRY 40     // max. WiFi connection attempts before switching to soft AP mode
 
@@ -287,13 +289,13 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     }
     // write form
     s = F("<form action=\"/\" method=\"post\">\n");
-    s += "Number of points (max. " + String(NPTS,DEC) +"): <input type=\"number\" id=\"npts\" name=\"numPoints\" min=\"10\" max=\"" + String(NPTS,DEC) + "\" value=\"" + String(n,DEC) + "\"><br>\n";
-    s += "Filtering Window (max. " + String(MAXWIN,DEC) +"): <input type=\"number\" id=\"npts\" name=\"filterWindow\" min=\"1\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"><br>\n";
+    s += "Number of points (max. " + String(NPTS,DEC) +"): &nbsp; <input type=\"number\" id=\"npts\" name=\"numPoints\" size=\"5\" min=\"10\" max=\"" + String(NPTS,DEC) + "\" value=\"" + String(n,DEC) + "\"><br>\n";
+    s += "Filtering Window (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): &nbsp; <input type=\"number\" id=\"npts\" name=\"filterWindow\" size=\"3\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"><br>\n";
     s += F("<input type=\"submit\" id=\"run\" value=\"Acquire Data\" formmethod=\"post\" name=\"acquire\"/>\n");
     s += F("<input type=\"button\" id=\"download\" value=\"Save Data\" /><p></p>\n");
     s += F("</form>\n");
     s += F("<div style=\"width: 100%; display: table;\">\n<div style=\"display: table-row\">\n<div style=\"width: 320px; display: table-cell; vertical-align:top;\">\n"); 
-    s += F("<textarea readonly id=\"content\" rows=\"40\" cols=\"35\">");
+    s += F("<textarea readonly id=\"content\" rows=\"30\" cols=\"26\">");
     server.sendContent(s);
 
 
@@ -418,6 +420,18 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     }
     clearDisplayLines();
     return true;
+  }
+
+  if (path.endsWith(".png")) {
+   Serial.println(F("image file requested"));
+    if (SPIFFS.exists(path)) {
+      File dataFile = SPIFFS.open(path.c_str(), "r");  
+      if (server.streamFile(dataFile, "image/png") != dataFile.size()) {
+        return false;
+      } else {
+        return true;
+      }
+    }
   }
   
   Serial.println("\tFile Not Found");
