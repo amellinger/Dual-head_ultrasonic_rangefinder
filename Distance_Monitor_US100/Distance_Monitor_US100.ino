@@ -27,6 +27,10 @@
  * V 1.8   2023-07-21
  *         Updated jquery to 3.7.0 (security fix). Increased chart line width ("borderWidth") from 1 to 2.
  *         Added CMU logo. Set filtering min. window size to 3.
+ *        
+ *        
+ * V 1.9   2023-07-24
+ *         Update website appearance with CMU logo, CSS and a loading spinner.
  */
 
 #include <ESP8266WiFi.h>
@@ -289,13 +293,17 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     }
     // write form
     s = F("<form action=\"/\" method=\"post\">\n");
-    s += "Number of points (max. " + String(NPTS,DEC) +"): &nbsp; <input type=\"number\" id=\"npts\" name=\"numPoints\" size=\"5\" min=\"10\" max=\"" + String(NPTS,DEC) + "\" value=\"" + String(n,DEC) + "\"><br>\n";
-    s += "Filtering Window (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): &nbsp; <input type=\"number\" id=\"npts\" name=\"filterWindow\" size=\"3\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"><br>\n";
-    s += F("<input type=\"submit\" id=\"run\" value=\"Acquire Data\" formmethod=\"post\" name=\"acquire\"/>\n");
-    s += F("<input type=\"button\" id=\"download\" value=\"Save Data\" /><p></p>\n");
+    s += F("<table size=\"500px\">\n");
+    s += F("  <tr>\n");
+    s +=   "     <td>Number of points (max. " + String(NPTS,DEC) +"): &nbsp; </td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"numPoints\" size=\"5\" min=\"10\" max=\"" + String(NPTS,DEC) + "\" value=\"" + String(n,DEC) + "\"></td>\n";
+    s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 50px\"> <input type=\"submit\" id=\"run\" value=\"Acquire Data\" formmethod=\"post\" name=\"acquire\"/> ");
+    s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 20px\"> <input type=\"button\" id=\"download\" value=\"Save Data\" /></td>\n");
+    s += F("  </tr>\n    <tr>\n");
+    s += "     <td>Filtering Window (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): &nbsp; </td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"filterWindow\" size=\"3\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"></td>\n";
+    s += F("</table>\n<p></p>\n");
     s += F("</form>\n");
     s += F("<div style=\"width: 100%; display: table;\">\n<div style=\"display: table-row\">\n<div style=\"width: 320px; display: table-cell; vertical-align:top;\">\n"); 
-    s += F("<textarea readonly id=\"content\" rows=\"30\" cols=\"26\">");
+    s += F("<textarea readonly id=\"content\" rows=\"30\" cols=\"31\">");
     server.sendContent(s);
 
 
