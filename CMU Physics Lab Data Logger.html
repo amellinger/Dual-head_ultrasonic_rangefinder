@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>CMU Physics Lab Data Logger</title>
+<script src="CMU%20Physics%20Lab%20Data%20Logger_files/jquery-3.7.0.min.js"></script>
+<!--<script src="chart.min.js"></script>-->
+<script src="CMU%20Physics%20Lab%20Data%20Logger_files/Chart.bundle.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+
+        function saveTextAsFile() {
+            // grab the content of the form field and place it into a variable
+            var textToWrite = document.getElementById("content").value;
+            //  create a new Blob (html5 magic) that conatins the data from your form feild
+            var textFileAsBlob = new Blob([textToWrite], { type: 'text/plain' });
+            // Specify the name of the file to be saved
+            var fileNameToSaveAs = "distance_data.txt";
+
+            // Optionally allow the user to choose a file name by providing 
+            // an imput field in the HTML and using the collected data here
+            //var fileNameToSaveAs = txtFileName.text;
+
+            // create a link for our script to 'click'
+            var downloadLink = document.createElement("a");
+            //  supply the name of the file (from the var above).
+            // you could create the name here but using a var
+            // allows more flexability later.
+            downloadLink.download = fileNameToSaveAs;
+            // provide text for the link. This will be hidden so you
+            // can actually use anything you want.
+            downloadLink.innerHTML = "My Hidden Link";
+
+            // allow our code to work in webkit & Gecko based browsers
+            // without the need for a if / else block.
+            window.URL = window.URL || window.webkitURL;
+
+            // Create the link Object.
+            downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+            // when link is clicked call a function to remove it from
+            // the DOM in case user wants to save a second file.
+            downloadLink.onclick = destroyClickedElement;
+            // make sure the link is hidden.
+            downloadLink.style.display = "none";
+            // add the link to the DOM
+            document.body.appendChild(downloadLink);
+
+            // click the new link
+            downloadLink.click();
+        }
+
+        function destroyClickedElement(event) {
+            // remove the link from the DOM
+            document.body.removeChild(event.target);
+        }
+
+
+
+        $("#download").click(function (e) {
+            e.preventDefault();
+            saveTextAsFile();
+        });
+        
+        $('#run').click(function() {
+            $(this).css('color','red');
+            $('#spinner').css('visibility', 'visible');
+     
+        });
+
+ });  
+</script>
+
+<style>
+
+
+* {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+tr {
+  background-color: #e5e5e5;
+}
+
+input[type=submit], input[type=button] {
+  background-color: #d5d5d5;
+  border: 1;
+  color: black;
+  padding: 9px 9px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  -webkit-border-radius: .5em; 
+  -moz-border-radius: .5em;
+  border-radius: .5em;
+}
+
+#spinner {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+  display: block;
+    position: absolute;
+    top: 40%;
+    margin-top: -4.05em;
+    left: 50%;
+    margin-left: -60px;
+    visibility: visible;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+
+
+</head>
+<body>
+<div id="spinner"></div>
+
+<img src="CMU%20Physics%20Lab%20Data%20Logger_files/Combo_horz_maroongold.png" width="300">
+<h2>CMU Physics Lab Data Logger</h2>
+<form action="/" method="post">
+<table size="500px">
+  <tr>
+    <td> Number of points (max. 1500): &nbsp;</td>
+    <td style="text-align: right;"> <input type="number" id="npts" name="numPoints" size="5" min="10" max="1500" value="400"></td>
+    <td rowspan="2" style="background-color: #ffffff; padding: 0px 50px"> <input type="submit" id="run" value="Acquire Data" formmethod="post" name="acquire"></td>
+    <td rowspan="2" style="background-color: #ffffff; padding: 0px 20px"> <input type="button" id="download" value="Save Data"></td>
+  </tr>
+  <tr>
+    <td> Filtering Window (3...17):  &nbsp;</td>
+    <td style="text-align: right;"> <input type="number" id="npts" name="filterWindow" size="3" min="3" max="17" value="7"></td>
+  </tr>
+</table>
+<p></p>
+
+</form>
+<div style="width: 100%; display: table;">
+<div style="display: table-row">
+<div style="width: 320px; display: table-cell; vertical-align:top;">
+<textarea readonly="readonly" id="content" rows="30" cols="26"></textarea>
+</div>
+<div style="display: table-cell;">
+</div>
+</div>
+</div>
+
+</body></html>
