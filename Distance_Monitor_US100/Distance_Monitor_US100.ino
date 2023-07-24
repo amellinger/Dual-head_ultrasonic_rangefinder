@@ -299,7 +299,11 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 50px\"> <input type=\"submit\" id=\"run\" value=\"Acquire Data\" formmethod=\"post\" name=\"acquire\"/> ");
     s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 20px\"> <input type=\"button\" id=\"download\" value=\"Save Data\" /></td>\n");
     s += F("  </tr>\n    <tr>\n");
+<<<<<<< HEAD
     s += "     <td>Filtering window size (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): <br><span style=\"font-size:9pt;\">Large filter window sizes result in smoother curves.</span>  </td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"filterWindow\" size=\"3\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"></td>\n";
+=======
+    s += "     <td>Filtering Window (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): <br><span style=\"font-size:9pt;\">Large filter window sizes lead to smoother curves.</span>  </td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"filterWindow\" size=\"3\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"></td>\n";
+>>>>>>> c197d5c5e3a795e490518b8b00dddafb9c891fcd
     s += F("</table>\n<p></p>\n");
     s += F("</form>\n");
     s += F("<div style=\"width: 100%; display: table;\">\n<div style=\"display: table-row\">\n<div style=\"width: 320px; display: table-cell; vertical-align:top;\">\n"); 
