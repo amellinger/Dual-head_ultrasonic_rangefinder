@@ -31,8 +31,8 @@
  * V 1.9   2023-07-24
  *         Update website appearance with CMU logo, CSS and a loading spinner. Explanatory text for number of points and filter window.
  *         
- * V 1.9.1 2023-07-25
- *         Fixed extraneous </td> element.
+ * V 1.10  2023-07-25
+ *         Fixed extraneous </td> and missing </tr> elements, and other HTML/CSS errors.
  */
 
 #include <ESP8266WiFi.h>
@@ -295,13 +295,14 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     }
     // write form
     s = F("<form action=\"/\" method=\"post\">\n");
-    s += F("<table size=\"500px\">\n");
+    s += F("<table>\n");
     s += F("  <tr>\n");
-    s +=   "     <td>Number of points (max. " + String(NPTS,DEC) +"): <br><span style=\"font-size:9pt;\">Acquiring a larger number of data points takes more time.</span></td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"numPoints\" size=\"5\" min=\"10\" max=\"" + String(NPTS,DEC) + "\" value=\"" + String(n,DEC) + "\"></td>\n";
-    s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 50px\"> <input type=\"submit\" id=\"run\" value=\"Acquire Data\" formmethod=\"post\" name=\"acquire\"/> ");
-    s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 20px\"> <input type=\"button\" id=\"download\" value=\"Save Data\" /></td>\n");
-    s += F("  </tr>\n    <tr>\n");
-    s += "     <td>Filter window size (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): <br><span style=\"font-size:9pt;\">Large filter window sizes result in smoother curves.</span></td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"filterWindow\" size=\"3\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"></td>\n";
+    s +=   "     <td>Number of points (max. " + String(NPTS,DEC) +"): <br><span style=\"font-size:9pt;\">Acquiring a larger number of data points takes more time.</span></td> <td style=\"text-align: right;\"><input type=\"number\" id=\"npts\" name=\"numPoints\" style=\"width: 4em; text-align: right;\" min=\"10\" max=\"" + String(NPTS,DEC) + "\" value=\"" + String(n,DEC) + "\"></td>\n";
+    s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 50px\"> <input type=\"submit\" id=\"run\" value=\"Acquire Data\" formmethod=\"post\" name=\"acquire\"> ");
+    s += F("     <td rowspan=\"2\" style=\"background-color: #ffffff; padding: 0px 20px\"> <input type=\"button\" id=\"download\" value=\"Save Data\"></td>\n");
+    s += F("  </tr>\n   <tr>\n");
+    s += "     <td>Filter window size (" + String(MINWIN,DEC) + "..." + String(MAXWIN,DEC) +"): <br><span style=\"font-size:9pt;\">Large filter window sizes result in smoother curves.</span></td> <td style=\"text-align: right;\"><input type=\"number\" id=\"filtWin\" name=\"filterWindow\" style=\"width: 4em; text-align: right;\" min=\"" + String(MINWIN,DEC) + "\" max=\"" + String(MAXWIN,DEC) +  "\" value=\"" + String(w,DEC) + "\"></td>\n";
+    s += F("  </tr>\n");
     s += F("</table>\n<p></p>\n");
     s += F("</form>\n");
     s += F("<div style=\"width: 100%; display: table;\">\n<div style=\"display: table-row\">\n<div style=\"width: 320px; display: table-cell; vertical-align:top;\">\n"); 
