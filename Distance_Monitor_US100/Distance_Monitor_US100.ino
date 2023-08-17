@@ -33,6 +33,9 @@
  *         
  * V 1.10  2023-07-25
  *         Fixed extraneous </td> and missing </tr> elements, and other HTML/CSS errors.
+ *         
+ * V 1.11  2023-08-17
+ *         Cleared remote RmtIP on display after data acquisition.
  */
 
 #include <ESP8266WiFi.h>
@@ -439,10 +442,13 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
       File dataFile = SPIFFS.open(path.c_str(), "r");  
       if (server.streamFile(dataFile, "image/png") != dataFile.size()) {
         return false;
-      } else {
-        return true;
       }
+    } else {
+      clearDisplayLines();
+      return false;
     }
+    clearDisplayLines();
+    return false;
   }
   
   Serial.println("\tFile Not Found");
