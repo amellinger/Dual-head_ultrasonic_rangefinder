@@ -36,6 +36,10 @@
  *         
  * V 1.11  2023-08-17
  *         Cleared remote RmtIP on display after data acquisition.
+ *         
+ * V 2.0   2024-01-15
+ *         Streams data via serial output. Web interface still works.
+ *         OLED display polishing
  */
 
 #include <ESP8266WiFi.h>
@@ -258,8 +262,6 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   Serial.println("handleFileRead: " + path);
   int n;
   int w;
-  unsigned long t0;
-  unsigned int DistArray[2];
   String clientinfo = "RmtIP " + server.client().remoteIP().toString();
   Serial.println(clientinfo);
   clearDisplayLines;
@@ -326,65 +328,9 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
       }
       */
 
-      // begin measurement loop
-      clearDisplayLines();
-      display.setCursor(0, 56);     // Start at top-left corner
-      display.println("Acquiring data...");
-      display.display();
-    
-      digitalWrite(LED_BUILTIN, LOW);
-      t0 = millis();
-      if (n>NPTS) { n=NPTS; }       // prevent buffer overflow
-      if (n<10) { n=10; }
-      for (int i=0; i<n; i++) {
-        // read distance in units of 0.1 mm to decrease quantization error
-        if (read_US100_Dist_sequential(&US100_sensor_1, &US100_sensor_2, DistArray)) {
-          i--;                      // repeat measurement if data is invalid
-        } 
-        else {
-          // record time
-          dt[i] = millis()-t0;
-          dist_mm1[i] = 10*DistArray[0];
-          dist_mm2[i] = 10*DistArray[1];
-        }
-      }
-      // end measurement loop
-
-      digitalWrite(LED_BUILTIN, HIGH);
-      display.setCursor(0, 56);
-      display.println("                    ");
-      display.setCursor(0, 56);
-      display.println("Downloading data...");
-      display.display();
-
-
-
-      // Savitzky-Golay Filtering starts here
-
-      
-      double tstep = 1.0*dt[n-1]/n/1000.;             // time step in seconds
-      SG_Filter(dist_mm1, n, w, 0);
-      SG_Filter(dist_mm2, n, w, -TDELAY/tstep);
-//      SG_Filter(dist_mm2, n, m, 0.0);
-
-      // S-G filtering ends here
-
-
-      // output data
-      Serial.println(F("Start data download"));
-      s = F("Vernier Format 2\r\n");
-      s += F("Motion Sensor Distance Readings\r\n");
-      s += F("Data Set\r\n");
-      s += F("Time\tTop\tBottom\r\n");
-      s += F("t\td_top\td_bottom\r\n");
-      s += F("s\tm\tm\r\n");
-      server.sendContent(s);
-      
-      for (int i=0; i<n; i++) {
-        s = String(dt[i]/1000.0, 4) + "\t" + String(dist1(dist_mm1[i]), 4) + "\t" + String(dist2(dist_mm2[i]), 4) + "\r\n";
-        server.sendContent(s);
-      }
-
+///////////////////////
+      acquire_data(n, w);
+///////////////////////
     }
    
     s = F("</textarea>\n</div>\n<div style=\"display: table-cell;\">\n");
@@ -454,6 +400,79 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   Serial.println("\tFile Not Found");
   clearDisplayLines();
   return false;                                         // If the file doesn't exist, return false
+}
+
+
+void acquire_data(int n, int w){
+  unsigned long t0;
+  unsigned int DistArray[2];
+ 
+  // begin measurement loop
+  clearDisplayLines();
+  display.setCursor(0, 56);
+  display.println("Acquiring data...");
+  display.display();
+
+  digitalWrite(LED_BUILTIN, LOW);
+  t0 = millis();
+  if (n>NPTS) { n=NPTS; }       // prevent buffer overflow
+  if (n<10) { n=10; }
+  for (int i=0; i<n; i++) {
+    // read distance in units of 0.1 mm to decrease quantization error
+    if (read_US100_Dist_sequential(&US100_sensor_1, &US100_sensor_2, DistArray)) {
+      i--;                      // repeat measurement if data is invalid
+    } 
+    else {
+      // record time
+      dt[i] = millis()-t0;
+      dist_mm1[i] = 10*DistArray[0];
+      dist_mm2[i] = 10*DistArray[1];
+    }
+  }
+  // end measurement loop
+
+  digitalWrite(LED_BUILTIN, HIGH);
+  display.setCursor(0, 56);
+  display.println("                    ");
+  display.setCursor(0, 56);
+  display.println("Downloading data...");
+  display.display();
+
+
+
+  // Savitzky-Golay Filtering starts here
+
+  
+  double tstep = 1.0*dt[n-1]/n/1000.;             // time step in seconds
+  SG_Filter(dist_mm1, n, w, 0);
+  SG_Filter(dist_mm2, n, w, -TDELAY/tstep);
+//      SG_Filter(dist_mm2, n, m, 0.0);
+
+  // S-G filtering ends here
+
+
+  // output data
+  Serial.println(F("Start data download"));
+  s = F("Vernier Format 2\r\n");
+  s += F("Motion Sensor Distance Readings\r\n");
+  s += F("Data Set\r\n");
+  s += F("Time\tTop\tBottom\r\n");
+  s += F("t\td_top\td_bottom\r\n");
+  s += F("s\tm\tm\r\n");
+  server.sendContent(s);
+
+  Serial.println("# Data Begin");
+  for (int i=0; i<n; i++) {
+    s = String(dt[i]/1000.0, 4) + "\t" + String(dist1(dist_mm1[i]), 4) + "\t" + String(dist2(dist_mm2[i]), 4) + "\r\n";
+    server.sendContent(s);
+    Serial.print(s); // Serial data output
+  }
+  Serial.println("# Data End");
+
+  display.setCursor(0, 56);
+  display.println("                    ");
+  display.display();
+
 }
 
 
@@ -797,10 +816,37 @@ void setup() {
 
 }
 
+int incomingByte = 0; // for incoming serial data
+int n = 400;
+int w = 7;
+int cnt = 0;
+
 
 void loop() {
- server.handleClient();
+  server.handleClient();
 // Serial.println("In Loop");
- delayMicroseconds(100); // 100 µs needed to keep WiFi active. Why? (ping fails after a few seconds w/o this statement)
+  delayMicroseconds(100); // 100 µs needed to keep WiFi active. Why? (ping fails after a few seconds w/o this statement)
+  //display.clearDisplay();
+//  display.setCursor(0, 10);     // Start at top-left corner
+//  display.println("Start...");
+//  display.display();
+
+  if (Serial.available() > 0) {
+    // read the incoming byte:
+    incomingByte = Serial.read();
+    
+    // say what you got:
+    Serial.print("I received: ");
+    Serial.println(incomingByte, DEC);
+    if (incomingByte==58){      // colon character intiates data acquisition
+      n = Serial.parseInt();
+      w = Serial.parseInt();
+
+      if ((n>10) && (n<NPTS) && (w>=MINWIN) && (w<=MAXWIN)) {
+        acquire_data(n, w);
+      }
+      Serial.println("Data output done.");      
+    }
+  }
 // delay(0);  
 }
