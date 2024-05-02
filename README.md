@@ -13,3 +13,6 @@ For details, see W. Joysey and A. Mellinger, "Low-cost ultrasonic distance measu
 - Install the [Arduino ESP8266 filesystem uploader](https://github.com/esp8266/arduino-esp8266fs-plugin).
 - Close the serial monitor. Select the "Tools > ESP8266 Sketch Data Upload" menu item. This should start uploading the files into ESP8266 flash file system.
 - Compile and upload the code.
+
+## USB_Data_Acquisition
+A companion Python program reads out the data via serial port and performs least squares fits for damped and driven oscillations.
