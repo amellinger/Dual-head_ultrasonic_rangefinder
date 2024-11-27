@@ -6,7 +6,7 @@ USB readout of the ESP8266-based ultrasonic sensor
 
 2023-11-26: V 1.0
 2024-03-19: V 1.1   Bug-fix for "Save Data" button
-2024-05-02: V 1.2   Combined "Save Data/Plot" button. Fit parameters saved in data file.
+2024-05-11: V 1.2   Combined "Save Data/Plot" button. Fit parameters saved in data file. Fixed strings with LaTeX code (need to be r strings)
 
 @author: melli1a
 """
@@ -18,6 +18,7 @@ WindowTitle = 'Damped + Driven Oscillator  V 1.2'
 import numpy as np
 import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from  matplotlib.backends import backend_pdf   # Needed for pyinstaller
 from matplotlib.figure import Figure
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -40,7 +41,8 @@ if getattr(sys, 'frozen', False):
 # import PySimpleGUI as sg
 import FreeSimpleGUI as sg    # Switched to FreeSimpleGUI since PySimpleGUI went closed-source
                               # Download from https://github.com/spyoungtech/FreeSimpleGui/
-                              # and install with python3 setup.py install
+                              # or install directly with 
+                              # pip install https://github.com/spyoungtech/FreeSimpleGUI/archive/refs/heads/main.zip
 import serial
 import serial.tools.list_ports
 
@@ -180,20 +182,20 @@ layout = [  [sg.Frame(layout=[[sg.Image(resource_path('CMU-PHY_Logo_268px.png'),
                                                             ], 
                                                     title='Actions', title_color='#FFC82E', size=(350,96))],
                                           [sg.Frame(layout=[
-                                                            [sg.Text('', size=(15,1), key='-T00-'),
-                                                             sg.Text('', size=(4,1), key='-T01-'),
+                                                            [sg.Text('', size=(16,1), key='-T00-'),
+                                                             sg.Text('', size=(4,1), key='-T01-', font='Arial 10 italic'),
                                                              sg.Text('', key='-T02-', text_color='#ffffff')],
-                                                            [sg.Text('', size=(15,1), key='-T10-'),
-                                                             sg.Text('', size=(4,1), key='-T11-'),
+                                                            [sg.Text('', size=(16,1), key='-T10-'),
+                                                             sg.Text('', size=(4,1), key='-T11-', font='Arial 10 italic'),
                                                              sg.Text('', key='-T12-', text_color='#ffffff')],
-                                                            [sg.Text('', size=(15,1), key='-T20-'),
-                                                             sg.Text('', size=(4,1), key='-T21-'),
+                                                            [sg.Text('', size=(16,1), key='-T20-'),
+                                                             sg.Text('', size=(4,1), key='-T21-', font='Arial 10 italic'),
                                                              sg.Text('', key='-T22-', text_color='#ffffff')],
-                                                            [sg.Text('', size=(15,1), key='-T30-'),
-                                                             sg.Text('', size=(4,1), key='-T31-'),
+                                                            [sg.Text('', size=(16,1), key='-T30-'),
+                                                             sg.Text('', size=(4,1), key='-T31-', font='Arial 10 italic'),
                                                              sg.Text('', key='-T32-', text_color='#ffffff')],
-                                                            [sg.Text('', size=(15,1), key='-T40-'),
-                                                             sg.Text('', size=(4,1), key='-T41-'),
+                                                            [sg.Text('', size=(16,1), key='-T40-'),
+                                                             sg.Text('', size=(4,1), key='-T41-', font='Arial 10 italic'),
                                                              sg.Text('', key='-T42-', text_color='#ffffff')]
                                                             ],
                                                     title='Analysis', title_color='#FFC82E', size=(350,170))]
@@ -208,7 +210,7 @@ OutText = [[['Ang. Driving Freq.:', 'ωd  ='],
             ['Phase Shift: ',       'Δϕ  ='],
             ['',                    '']],
            [['Initial Amplitude:',  'Ai  ='],
-            ['Damping Param.:',  '𝛾   ='],
+            ['Damping Param.:',  'λ   ='],
             ['Angular Frequency:',  'ω   ='],
             ['Phase:',              'ϕ   ='],
             ['Zero Position:',      'x0  =']]]
@@ -235,9 +237,6 @@ def draw_figure_w_toolbar(canvas, fig, canvas_toolbar):
 
 
 class Toolbar(NavigationToolbar2Tk):
-    print(f'{NavigationToolbar2Tk.toolitems = }, {dir(NavigationToolbar2Tk) = }')
-    toolitems = [t for t in NavigationToolbar2Tk.toolitems]
-    # print(f'{toolitems = }')
     def __init__(self, *args, **kwargs):
         self.toolitems = (
             (('Home', 'Reset original view', 'home', 'home'), 
@@ -417,10 +416,10 @@ def fit_driven():
             
             # Annotate arrows
             
-            text1 = ax.text(tt[idx1]+np.pi/omega_d.n, top_popt[3]+1.18*A0.n, "$T = 2\pi/\omega_\mathsf{d}$", fontsize=16, color='#cf7400', zorder=5, va='bottom', ha='center')
+            text1 = ax.text(tt[idx1]+np.pi/omega_d.n, top_popt[3]+1.18*A0.n, r"$T = 2\pi/\omega_\mathsf{d}$", fontsize=16, color='#cf7400', zorder=5, va='bottom', ha='center')
             text2 = ax.text(tt[idx1], top_popt[3] + 0.2*(xx1[idx1]-top_popt[3]), " $A_0$", fontsize=16, color='#bf0000', zorder=5)
-            text3 = ax2.text(tt[idx2]+add_t, bottom_popt[3] + 0.2*(xx2[idx2]-bottom_popt[3]), " $A$", fontsize=16, color='#bf0000', zorder=5)
-            text4 = ax2.text(tt[idx1], bottom_popt[3] - 0.1*(xx2[idx2]-bottom_popt[3]), "$\Delta\phi/\omega_d$", fontsize=16, color='#00afaf', ha='left', va='top', zorder=5)
+            text3 = ax2.text(tt[idx2]+add_t, bottom_popt[3] + 0.2*(xx2[idx2]-bottom_popt[3]), r" $A$", fontsize=16, color='#bf0000', zorder=5)
+            text4 = ax2.text(tt[idx1], bottom_popt[3] - 0.1*(xx2[idx2]-bottom_popt[3]), r"$\Delta\phi/\omega_d$", fontsize=16, color='#00afaf', ha='left', va='top', zorder=5)
         
             # Text output of fit results
             for i in range(len(OutText[0])):
@@ -447,8 +446,8 @@ def fit_driven():
 #%%
 
 
-def xdmp(t, A0, gamma, omega, phi, x0):
-    return A0 * np.exp(-gamma*t) * np.cos(omega*t+phi) + x0
+def xdmp(t, A0, lmbda, omega, phi, x0):
+    return A0 * np.exp(-lmbda*t) * np.cos(omega*t+phi) + x0
 
 # Fit driven oscillator waveforms
 def fit_xdmp(t, x):
@@ -494,7 +493,7 @@ def fit_damped():
             print(bottom_popt, bottom_perr)
             
             A0 = ufloat(bottom_popt[0], bottom_perr[0])
-            gamma = ufloat(bottom_popt[1], bottom_perr[1])
+            lmbda = ufloat(bottom_popt[1], bottom_perr[1])
             omega = ufloat(bottom_popt[2], bottom_perr[2])
             phi = ufloat(bottom_popt[3], bottom_perr[3])
             while phi.n<0:
@@ -504,7 +503,7 @@ def fit_damped():
             x0 = ufloat(bottom_popt[4], bottom_perr[4])
         
             fitpar.clear()
-            fitpar = {'A0': A0, 'gamma': gamma, 'omega': omega, 'phi': phi, 'x0': x0}
+            fitpar = {'A0': A0, 'lambda': lmbda, 'omega': omega, 'phi': phi, 'x0': x0}
         
         
             # Draw fit lines
@@ -522,24 +521,24 @@ def fit_damped():
             if not(fitline4 in list(ax2.get_lines())):
                 ax2.add_line(fitline4)
         
-            arrowpos1_x = tt[0]+data[indmin,0] + 1.1/gamma.n
+            arrowpos1_x = tt[0]+data[indmin,0] + 1.1/lmbda.n
             arrowpos1_y = bottom_popt[0]*np.exp(-bottom_popt[1]*(arrowpos1_x-data[indmin,0]))+bottom_popt[4]
-            textpos1_x = arrowpos1_x + 0.4/gamma.n
+            textpos1_x = arrowpos1_x + 0.4/lmbda.n
             textpos1_y = arrowpos1_y+0.20*A0.n
         
             arrowpos2_x = tt[0]+data[indmin,0] + 0.55*2.0*np.pi/omega.n
-            arrowpos2_y = xdmp((arrowpos2_x-data[indmin,0]), A0.n, gamma.n, omega.n, phi.n, x0.n)
+            arrowpos2_y = xdmp((arrowpos2_x-data[indmin,0]), A0.n, lmbda.n, omega.n, phi.n, x0.n)
             textpos2_x = arrowpos2_x + 0.7*2.0*np.pi/omega.n
             textpos2_y = arrowpos2_y-0.02*A0.n
             
             print(f'********** fit_damped: tt[0]={tt[0]}',  arrowpos2_x, arrowpos2_y, textpos2_x, textpos2_y)
     
             # Text output of fit functions
-            textexp = ax2.annotate('$A_\mathsf{i}\, e^{-\gamma t} + x_0$', xy=(arrowpos1_x, arrowpos1_y), xytext=(textpos1_x, textpos1_y),
+            textexp = ax2.annotate(r'$A_\mathsf{i}\, e^{-\lambda t} + x_0$', xy=(arrowpos1_x, arrowpos1_y), xytext=(textpos1_x, textpos1_y),
                 arrowprops=dict(facecolor='#707000', shrink=0.05, color='#707000', width=1, headwidth=7, headlength=10),
                 color='#707000', fontsize=14, zorder=5
                 )
-            textdamped = ax2.annotate('$A_\mathsf{i}\, e^{-\gamma t}\, \cos(\omega t+\phi)+x_0$', xy=(arrowpos2_x, arrowpos2_y), 
+            textdamped = ax2.annotate(r'$A_\mathsf{i}\, e^{-\lambda t}\, \cos(\omega t+\phi)+x_0$', xy=(arrowpos2_x, arrowpos2_y), 
                 xytext=(textpos2_x, textpos2_y),
                 arrowprops=dict(facecolor='#303030', shrink=0.01, color='#303030', width=1, headwidth=7, headlength=10),
                 color='#303030', fontsize=14, zorder=5, va='center'
@@ -553,7 +552,7 @@ def fit_damped():
                     window[key].update(value=OutText[1][i][j])
             
             window['-T02-'].update(value=f'({A0.n:.4f} ± {A0.s:.4f}) m')
-            window['-T12-'].update(value=f'({gamma.n:.4f} ± {gamma.s:.4f}) 1/s')
+            window['-T12-'].update(value=f'({lmbda.n:.4f} ± {lmbda.s:.4f}) 1/s')
             window['-T22-'].update(value=f'({omega.n:.3f} ± {omega.s:.3f}) rad/s')
             window['-T32-'].update(value=f'({phi.n:.2f} ± {phi.s:.2f}) rad')
             window['-T42-'].update(value=f'({x0.n:.3f} ± {phi.s:.3f}) m')
@@ -636,15 +635,15 @@ def do_measurement():
             window['-SerConnect-'].update('Connect')
             return False
         print("Done reading serial data.")
-        tmp = serial_reply.decode()
-        # print(f'{type(tmp)}  ..... {tmp = }')
-        # print(f'{serial_reply = }')
-        if tmp=='':
-            connect_serial_port()
-            update_status('No data received. Check USB connection and click "Connect".', error=True)
-            return
-
         try:
+            tmp = serial_reply.decode()
+            # print(f'{type(tmp)}  ..... {tmp = }')
+            # print(f'{serial_reply = }')
+            if tmp=='':
+                connect_serial_port()
+                update_status('No data received. Check USB connection and click "Connect".', error=True)
+                return
+
             tmp2 = tmp.split(DATA_BEGIN)[1].split(DATA_END)[0]
             # print(f'{tmp2 = }')
             data_l = tmp2.split('\r\n')

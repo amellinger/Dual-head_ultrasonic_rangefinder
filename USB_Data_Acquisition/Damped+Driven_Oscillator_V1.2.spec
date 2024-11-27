@@ -6,12 +6,13 @@ a = Analysis(
     pathex=['.'],
     binaries=[],
     datas=[('CMU-PHY_Logo_268px.png', '.')],
-    hiddenimports=["'PIL._tkinter_finder'"],
+    hiddenimports=["'PIL._tkinter_finder'", "'FreeSimpleGUI'"],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
+    optimize=0,
 )
 pyz = PYZ(a.pure)
 splash = Splash(
